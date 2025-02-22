@@ -1,0 +1,77 @@
+THE ONES I CHOSE:
+#####################################################################
+REAL
+- Kinetics-700
+https://github.com/cvdfoundation/kinetics-dataset?tab=readme-ov-file
+- msrvtt (low qual) 
+https://www.kaggle.com/datasets/vishnutheepb/msrvtt
+- UCF101 
+(https://www.crcv.ucf.edu/THUMOS14/download.html)
+- Vimeo90K
+http://toflow.csail.mit.edu/
+
+REAL AND FAKE TOO:
+-https://www.kaggle.com/datasets/kanzeus/realai-video-dataset
+
+Pregenerated (AI):
+Ai videos(from different prompts):
+https://huggingface.co/datasets/WenhaoWang/VidProM/tree/main
+Ai faces/deepfakes:
+https://github.com/ondyari/FaceForensics/tree/master/dataset
+#####################################################################
+
+What I've looked through(might be useful):
+MS COCO (Microsoft Common Objects in Context) - IMAGES
+https://paperswithcode.com/dataset/coco
+
+Action Recognition Data Set - VIDEO CLIPS
+https://paperswithcode.com/dataset/ucf101
+
+Kinetics (Kinetics Human Action Video Dataset) - VIDEO CLIPS
+https://paperswithcode.com/dataset/kinetics
+
+HMDB51 - VIDEO CLIPS
+https://paperswithcode.com/dataset/hmdb51
+
+MSR-VTT - VIDEO CLIPS
+https://paperswithcode.com/dataset/msr-vtt
+
+BDD100K - VIDEO CLIPS
+https://paperswithcode.com/dataset/bdd100k
+
+OTB - VIDEO CLIPS
+https://paperswithcode.com/dataset/otb
+
+MSVD (Microsoft Research Video Description Corpus)
+https://paperswithcode.com/dataset/msvd
+
+THUMOS14
+https://paperswithcode.com/dataset/thumos14-1
+
+Something-Something V2
+https://paperswithcode.com/dataset/something-something-v2
+
+LaSOT (Large-scale Single Object Tracking)
+https://paperswithcode.com/dataset/lasot
+
+WebVid
+https://paperswithcode.com/dataset/webvid
+
+Vimeo90K
+https://paperswithcode.com/dataset/vimeo90k-1
+
+VIDEOSHAM
+https://arxiv.org/abs/2207.13064
+https://github.com/adobe-research/VideoSham-dataset
+
+Deepfake Videos in the Wild: Analysis and Detection
+https://arxiv.org/abs/2103.04263?utm_source=chatgpt.com
+
+YouTube-VOS 2018 (Youtube Video Object Segmentation)
+https://paperswithcode.com/dataset/youtube-vos
+
+ACID (Aerial Coastline Imagery Dataset)
+https://paperswithcode.com/dataset/acid
+
+Youku-mPLUG
+https://paperswithcode.com/dataset/youku-mplug
