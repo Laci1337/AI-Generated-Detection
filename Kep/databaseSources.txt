@@ -1,0 +1,35 @@
+Adatbázisok:
+
+
+
+Előre elkészített: 
+
+Cash Bowman – AI Generated Images vs Real Images
+https://www.kaggle.com/datasets/cashbowman/ai-generated-images-vs-real-images
+
+
+Jordan J. Bird – CIFAKE: Real and AI-Generated Synthetic Images
+https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images
+
+
+SuperPotato9 – Ai recognition dataset
+https://www.kaggle.com/datasets/superpotato9/dalle-recognition-dataset
+
+
+Shahzaib Ur Rehman – Detect AI-Generated Faces: High-Quality Dataset
+https://www.kaggle.com/datasets/shahzaibshazoo/detect-ai-generated-faces-high-quality-dataset
+
+
+Sunny Kakar – Shoes Dataset: Real and AI-Generated Images
+https://www.kaggle.com/datasets/sunnykakar/shoes-dataset-real-and-ai-generated-images
+
+
+
+
+
+
+
+
+
+
+
