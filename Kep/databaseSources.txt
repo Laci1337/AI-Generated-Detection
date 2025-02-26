@@ -25,6 +25,15 @@ https://www.kaggle.com/datasets/sunnykakar/shoes-dataset-real-and-ai-generated-i
 
 
 
+Saját generálás:
+
+Kandinsky 2.1 (telepítés: pip install diffusers transformers accelerate)
+
+ChatGPT kép generálás
+
+
+
+
 
 
 
