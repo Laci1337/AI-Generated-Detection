@@ -39,7 +39,7 @@ def Run_partial_test(model, device, test_loader):
             if (total > 10):
                 break
 
-    print(f"Test Accuracy: {100 * correct / total:.2f}%")
+    print(f"Partial Test Accuracy: {100 * correct / total:.2f}%")
 
     model.train()
 

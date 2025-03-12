@@ -31,6 +31,8 @@ Kandinsky 2.1 (telepítés: pip install diffusers transformers accelerate)
 
 ChatGPT kép generálás
 
+Ötlet: faceswap
+
 
 
 

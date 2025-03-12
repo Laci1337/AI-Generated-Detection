@@ -25,21 +25,35 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
+batch_size = 64
+num_epochs = 1
 
 #load data
 
-#print(os.getcwd())
+train_locations = ['train1', 'train2', 'train3', 'train4']
+test_locations = ['test1', 'test2', 'test3', 'test4']
 
 #train data
-train_dataset = datasets.ImageFolder(root='data/train', transform=transform)
-train_loader = data.DataLoader(train_dataset, batch_size=64, shuffle=True)
+train_dataset_list = []
+
+for i in train_locations:
+    train_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
+
+train_dataset = torch.utils.data.ConcatDataset(train_dataset_list)
+train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 #test data
-test_dataset = datasets.ImageFolder(root='data/test', transform=transform)
-test_loader = data.DataLoader(test_dataset, batch_size=64, shuffle=False)
+test_dataset_list = []
+
+for i in test_locations:
+    test_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
+
+test_dataset = torch.utils.data.ConcatDataset(test_dataset_list)
+test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 #sample data
 sample_dataset = datasets.ImageFolder(root='data/sample', transform=transform) 
+#sample_dataset = test_dataset
 sample_loader = data.DataLoader(sample_dataset, batch_size=1, shuffle=True)
 
 #model, loss and optim
@@ -53,7 +67,10 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 #learn and test
 
 
-num_epochs = 1
+#print("Class mapping:", train_dataset.class_to_idx)
+print("Device: " + str(device))
+print("Train dataset len: " + str(len(train_dataset)))
+print("Test dataset len: " + str(len(test_dataset)))
 
 #graph data
 xData = []
@@ -127,7 +144,17 @@ elif (a == 2):
             #inverse normalisation
             img_np = (img_np * 0.5) + 0.5
 
-            print("Predicted: " + str(predicted.item()) + ", Actual: " + str(labels.item()))
+            if (predicted.item() == 0):
+                predicted_string = "ai generated"
+            else:
+                predicted_string = "real"
+
+            if (labels.item() == 0):
+                labels_string = "ai generated"
+            else:
+                labels_string = "real"
+
+            print("Predicted: " + predicted_string + ", Actual: " + labels_string)
 
             plt.imshow(img_np)
             plt.axis('off')
