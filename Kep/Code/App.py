@@ -9,6 +9,7 @@ import os
 
 import ClassificationNetwork
 import Functions
+import AugmentedDataset
 
 image_size = 240
 
@@ -26,12 +27,21 @@ transform = transforms.Compose([
 ])
 
 batch_size = 64
-num_epochs = 1
+num_epochs = 4
 
 #load data
 
 train_locations = ['train1', 'train2', 'train3', 'train4']
+train_locations = ['train1', 'train2', 'train4']
+
 test_locations = ['test1', 'test2', 'test3', 'test4']
+test_locations = ['test1', 'test2', 'test4']
+
+#train_locations = ['train1']
+#test_locations = ['test1']
+
+train_augmentation_n = 10235
+test_augmentation_n = 2264
 
 #train data
 train_dataset_list = []
@@ -40,6 +50,7 @@ for i in train_locations:
     train_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
 
 train_dataset = torch.utils.data.ConcatDataset(train_dataset_list)
+train_dataset = AugmentedDataset.AugmentedDataset(train_dataset, train_augmentation_n)
 train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 #test data
@@ -49,11 +60,12 @@ for i in test_locations:
     test_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
 
 test_dataset = torch.utils.data.ConcatDataset(test_dataset_list)
-test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+test_dataset = AugmentedDataset.AugmentedDataset(test_dataset, test_augmentation_n)
+test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
 #sample data
-sample_dataset = datasets.ImageFolder(root='data/sample', transform=transform) 
-#sample_dataset = test_dataset
+#sample_dataset = datasets.ImageFolder(root='data/sample', transform=transform) 
+sample_dataset = test_dataset
 sample_loader = data.DataLoader(sample_dataset, batch_size=1, shuffle=True)
 
 #model, loss and optim

@@ -11,7 +11,7 @@ class ClassificationNetwork(nn.Module):
         super(ClassificationNetwork, self).__init__()
 
         #first conv layer: input 3 channels (rgb), output 32 channels (32 filter matrix)
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=4, out_channels=32, kernel_size=3, padding=1)
         self.relu = nn.ReLU()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
 
@@ -23,6 +23,22 @@ class ClassificationNetwork(nn.Module):
         self.fc2 = nn.Linear(128, 2)
 
     def forward(self, x):
+        #fourier eleje
+
+        # x shape: (B, 3, H, W)
+        B, C, H, W = x.size()
+
+        fft = torch.fft.fft2(x)                    # complex tensor
+        fft_mag = torch.abs(torch.fft.fftshift(fft))  # shape (B, 3, H, W)
+        spectrum = torch.mean(fft_mag, dim=1, keepdim=True)  # (B, 1, H, W)
+
+        spectrum = (spectrum - spectrum.min()) / (spectrum.max() - spectrum.min() + 1e-6)
+
+        # Concatenate the spectrum to the RGB image
+        x = torch.cat([x, spectrum], dim=1)  # shape (B, 4, H, W)
+
+        #fourier vege
+
         x = self.conv1(x)
         x = self.relu(x)
         x = self.pool(x)
@@ -36,6 +52,8 @@ class ClassificationNetwork(nn.Module):
         x = self.fc1(x)
         x = self.relu(x)
         x = self.fc2(x)
+
+        #print(x)
 
         return x
     
