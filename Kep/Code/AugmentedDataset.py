@@ -14,9 +14,11 @@ class AugmentedDataset(torch.utils.data.Dataset):
                 self.augmented_indices.append(idx)
                 count += 1
                 if count >= n_augmented:
-                    break
+                    pass
+                    #break
 
-        self.total_len = len(dataset) + len(self.augmented_indices)
+        # Minden kiválasztott képhez 3 másolat készül (90, 180, 270)
+        self.total_len = len(dataset) + 3 * len(self.augmented_indices)
 
     def __len__(self):
         return self.total_len
@@ -25,7 +27,14 @@ class AugmentedDataset(torch.utils.data.Dataset):
         if idx < len(self.original_dataset):
             return self.original_dataset[idx]
         else:
-            aug_idx = self.augmented_indices[idx - len(self.original_dataset)]
-            image, label = self.original_dataset[aug_idx]
-            image = transforms.functional.rotate(image, 180)
+            # Hányadik augmentált kép vagyunk?
+            aug_idx = (idx - len(self.original_dataset)) // 3
+            rotation_variant = (idx - len(self.original_dataset)) % 3
+
+            image, label = self.original_dataset[self.augmented_indices[aug_idx]]
+
+            # Forgatás 90, 180 vagy 270 fokkal
+            angle = [90, 180, 270][rotation_variant]
+            image = transforms.functional.rotate(image, angle)
+
             return image, label
