@@ -27,7 +27,7 @@ transform = transforms.Compose([
 ])
 
 batch_size = 64
-num_epochs = 2
+num_epochs = 3
 
 #load sample data
 
@@ -74,7 +74,9 @@ if (a == 1):
     train_dataset_list = []
 
     for i in train_locations:
-        train_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
+        d = datasets.ImageFolder(root='data/' + str(i), transform=transform)
+        train_dataset_list.append(d)
+        #print("Class mapping:", d.class_to_idx)
 
     train_dataset = torch.utils.data.ConcatDataset(train_dataset_list)
     train_dataset = AugmentedDataset.AugmentedDataset(train_dataset, train_augmentation_n)
