@@ -26,8 +26,17 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
-batch_size = 64
-num_epochs = 3
+transform = transforms.Compose([
+    # 1) középről square crop a rövidebb oldal szerint
+    transforms.Lambda(lambda img: transforms.functional.center_crop(img, min(img.size))),
+    # 2) átméretezés image_size x image_size-re
+    transforms.Resize((image_size, image_size), interpolation=transforms.InterpolationMode.BICUBIC),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+])
+
+batch_size = 32
+num_epochs = 1
 
 #load sample data
 
@@ -40,7 +49,7 @@ sample_loader = data.DataLoader(sample_dataset, batch_size=1, shuffle=True)
 
 model = ClassificationNetwork.ClassificationNetwork().to(device)
 
-criterion = nn.CrossEntropyLoss()
+criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 
@@ -49,7 +58,6 @@ xData = []
 yLossData = []
 yTestData = []
 n = 1 #for graph 
-
 
 print("1 - Learn\n2 - Use")
 
@@ -76,7 +84,7 @@ if (a == 1):
     for i in train_locations:
         d = datasets.ImageFolder(root='data/' + str(i), transform=transform)
         train_dataset_list.append(d)
-        #print("Class mapping:", d.class_to_idx)
+        print("Class mapping:", d.class_to_idx)
 
     train_dataset = torch.utils.data.ConcatDataset(train_dataset_list)
     train_dataset = AugmentedDataset.AugmentedDataset(train_dataset, train_augmentation_n)
@@ -109,6 +117,7 @@ if (a == 1):
 
         for images, labels in train_loader:
             images = images.to(device)
+            labels = labels.float().unsqueeze(1)
             labels = labels.to(device)
 
             optimizer.zero_grad()
@@ -154,7 +163,8 @@ elif (a == 2):
             labels = labels.to(device)
 
             outputs = model(images)
-            _, predicted = torch.max(outputs, 1)
+            probs = torch.sigmoid(outputs)
+            predicted = (probs > Functions.border).int()
 
             img = images[0].to(torch.device("cpu"))
 
@@ -165,14 +175,14 @@ elif (a == 2):
             img_np = (img_np * 0.5) + 0.5
 
             if (predicted.item() == 0):
-                predicted_string = "ai generated"
-            else:
                 predicted_string = "real"
+            else:
+                predicted_string = "ai generated"
 
             if (labels.item() == 0):
-                labels_string = "ai generated"
-            else:
                 labels_string = "real"
+            else:
+                labels_string = "ai generated"
 
             print("Predicted: " + predicted_string + ", Actual: " + labels_string)
 

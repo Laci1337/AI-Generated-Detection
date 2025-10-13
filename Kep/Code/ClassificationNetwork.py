@@ -7,7 +7,7 @@ import torch.utils.data as data
 import os
 
 class ClassificationNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super(ClassificationNetwork, self).__init__()
 
         #first conv layer: input 3 channels (rgb), output 32 channels (32 filter matrix)
@@ -20,9 +20,9 @@ class ClassificationNetwork(nn.Module):
 
         self.fc1 = nn.Linear(64 * 60 * 60, 128)
 
-        self.fc2 = nn.Linear(128, 2)
+        self.fc2 = nn.Linear(128, 1)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         #fourier eleje
 
         # x shape: (B, 3, H, W)
@@ -58,7 +58,7 @@ class ClassificationNetwork(nn.Module):
         return x
     
 
-    def save(self, file_name = 'model.pth'):
+    def save(self, file_name: str = 'model.pth') -> None:
         model_folder_path = 'model'
 
         if not os.path.exists(model_folder_path):
@@ -70,7 +70,7 @@ class ClassificationNetwork(nn.Module):
         print("File saved")
 
 
-    def load(self, file_name='model.pth'):
+    def load(self, file_name: str = 'model.pth') -> bool:
         model_folder_path = 'model'
         file_name = os.path.join(model_folder_path, file_name)
 
