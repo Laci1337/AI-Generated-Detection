@@ -1,8 +1,9 @@
+from typing import Any, Tuple
 import torch
 import torchvision.transforms as transforms
 
 class AugmentedDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset, n_augmented):
+    def __init__(self, dataset, n_augmented: int) -> None:
         self.original_dataset = dataset
         self.n_augmented = n_augmented
         self.augmented_indices = []
@@ -10,7 +11,7 @@ class AugmentedDataset(torch.utils.data.Dataset):
         count = 0
         for idx in range(len(dataset)):
             _, label = dataset[idx]
-            if label == 1:
+            if label == 0:
                 self.augmented_indices.append(idx)
                 count += 1
                 if count >= n_augmented:
@@ -20,10 +21,10 @@ class AugmentedDataset(torch.utils.data.Dataset):
         # Minden kiválasztott képhez 3 másolat készül (90, 180, 270)
         self.total_len = len(dataset) + 3 * len(self.augmented_indices)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.total_len
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Tuple[torch.Tensor, int]:
         if idx < len(self.original_dataset):
             return self.original_dataset[idx]
         else:
