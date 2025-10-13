@@ -19,12 +19,6 @@ if (torch.cuda.is_available):
     device = torch.device("cuda")
 
 #data transform, data to tensor
-transform = transforms.Compose([
-    transforms.Resize(image_size),
-    transforms.CenterCrop(image_size),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
 
 transform = transforms.Compose([
     # 1) középről square crop a rövidebb oldal szerint
