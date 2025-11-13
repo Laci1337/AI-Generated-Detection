@@ -1,11 +1,33 @@
 import os
+from typing import Any
 import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
 border = 0.9
 
-def FindBestBorder(model: torch.nn.Module, device: torch.device, test_loader) -> None:
+def collect_model_outputs(model: torch.nn.Module, device: torch.device, test_loader) -> list[Any]:
+    output_list: list[Any] = []
+    
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device)
+            labels = labels.to(device).float().unsqueeze(1)  # (B,) -> (B,1)
+
+            outputs = model(images)
+            output_list.append(outputs)
+            
+            probs = torch.sigmoid(outputs)
+            predicted = (probs > border).float()
+
+            print("Labels: " + str(labels))
+            print("Outputs: " + str(probs) + "\n")
+
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    
+
+def find_best_border(model: torch.nn.Module, device: torch.device, test_loader) -> None:
     xData = []
     yData = []
 
@@ -14,14 +36,14 @@ def FindBestBorder(model: torch.nn.Module, device: torch.device, test_loader) ->
     for i in range(100):
         print("Inspected border: " + str(border))
         xData.append(border)
-        yData.append(100.0 * Run_test(model, device, test_loader))
+        yData.append(100.0 * run_test(model, device, test_loader))
         
         border += 0.01
 
     plt.plot(xData, yData)
     plt.show()
 
-def Run_test(model: torch.nn.Module, device: torch.device, test_loader) -> float:
+def run_test(model: torch.nn.Module, device: torch.device, test_loader) -> float:
     model.eval()
     correct = 0
     total = 0
@@ -46,7 +68,7 @@ def Run_test(model: torch.nn.Module, device: torch.device, test_loader) -> float
     return (correct / total)
 
 
-def Run_partial_test(model: torch.nn.Module, device: torch.device, test_loader) -> None:
+def run_partial_test(model: torch.nn.Module, device: torch.device, test_loader) -> None:
     model.eval()
     correct = 0
     total = 0

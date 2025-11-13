@@ -8,15 +8,11 @@ import matplotlib.pyplot as plt
 import os
 
 import ClassificationNetwork
-import Functions
-import AugmentedDataset
+from Functions import run_test, run_partial_test, find_best_border, border
+from AugmentedDataset import AugmentedDataset
+
 
 image_size = 240
-
-device = torch.device("cpu")
-
-if (torch.cuda.is_available):
-    device = torch.device("cuda")
 
 #data transform, data to tensor
 
@@ -29,157 +25,169 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
-batch_size = 32
-num_epochs = 1
+if __name__ == "__main__":
+    device = torch.device("cpu")
 
-#load sample data
+    if (torch.cuda.is_available):
+        device = torch.device("cuda")
 
-#sample data
-sample_dataset = datasets.ImageFolder(root='data/sample', transform=transform) 
-#sample_dataset = test_dataset
-sample_loader = data.DataLoader(sample_dataset, batch_size=1, shuffle=True)
+    batch_size = 32
+    num_epochs = 1
 
-#model, loss and optim
+    #load sample data
 
-model = ClassificationNetwork.ClassificationNetwork().to(device)
+    #sample data
+    sample_dataset = datasets.ImageFolder(root='data/sample', transform=transform) 
+    #sample_dataset = test_dataset
+    sample_loader = data.DataLoader(sample_dataset, batch_size=1, shuffle=True)
 
-criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+    #model, loss and optim
+
+    model = ClassificationNetwork.ClassificationNetwork().to(device)
+
+    criterion = nn.BCEWithLogitsLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 
-#graph data
-xData = []
-yLossData = []
-yTestData = []
-n = 1 #for graph 
-
-print("1 - Learn\n2 - Use")
-
-a = (int)(input())
-
-if (a == 1):
+    #graph data
+    xData = []
+    yLossData = []
+    yTestData = []
+    n = 1 #for graph 
+    
     #load data
-
-    #train_locations = ['train1', 'train2', 'train4']
     train_locations = ['train1', 'train4']
-
-    #test_locations = ['test1', 'test2', 'test4']
     test_locations = ['test1', 'test4']
 
-    #train_locations = ['train1']
-    #test_locations = ['test1']
+    print("1 - Learn\n2 - Use\n3 - Test")
 
-    train_augmentation_n = 10235
-    test_augmentation_n = 2264
+    a = (int)(input())
+    
+    if a == 1 or a == 3:
+        #test data
+        test_dataset_list = []
 
-    #train data
-    train_dataset_list = []
+        for i in test_locations:
+            test_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
 
-    for i in train_locations:
-        d = datasets.ImageFolder(root='data/' + str(i), transform=transform)
-        train_dataset_list.append(d)
-        print("Class mapping:", d.class_to_idx)
+        test_dataset = torch.utils.data.ConcatDataset(test_dataset_list)
+        test_dataset = AugmentedDataset(test_dataset)
+        test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+        
+    if a == 2 or a == 3:
+        model.load()
+        model.eval()
 
-    train_dataset = torch.utils.data.ConcatDataset(train_dataset_list)
-    train_dataset = AugmentedDataset.AugmentedDataset(train_dataset, train_augmentation_n)
-    train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    if a == 1:
+        #train data
+        train_dataset_list = []
 
-    #test data
-    test_dataset_list = []
+        for i in train_locations:
+            d = datasets.ImageFolder(root='data/' + str(i), transform=transform)
+            train_dataset_list.append(d)
+            print("Class mapping:", d.class_to_idx)
 
-    for i in test_locations:
-        test_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
+        train_dataset = torch.utils.data.ConcatDataset(train_dataset_list)
+        train_dataset = AugmentedDataset(train_dataset)
+        train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-    test_dataset = torch.utils.data.ConcatDataset(test_dataset_list)
-    test_dataset = AugmentedDataset.AugmentedDataset(test_dataset, test_augmentation_n)
-    test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
-
-    #learn and test
-
-
-    #print("Class mapping:", train_dataset.class_to_idx)
-    print("Device: " + str(device))
-    print("Train dataset len: " + str(len(train_dataset)))
-    print("Test dataset len: " + str(len(test_dataset)))
-
-    #learning
-
-    for epoch in range(num_epochs):
-        #learn
-        model.train()
-        running_loss = 0.0
-
-        for images, labels in train_loader:
-            images = images.to(device)
-            labels = labels.float().unsqueeze(1)
-            labels = labels.to(device)
-
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-
-            if (n % 100 == 0):
-                xData.append(n / 100)
-                yLossData.append(loss.item())
-                #yTestData.append(Functions.Run_partial_test(model, device, test_loader))      
-                yTestData.append(Functions.Run_test(model, device, sample_loader))        
-
-            n += 1
-
-            print("Loss: " + str(round(loss.item(), 2)))
-
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item()
-
-        avg_loss = running_loss / len(train_loader)
-        print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}")
+        #learn and test
 
 
-        #test
-        Functions.Run_test(model, device, test_loader)
+        #print("Class mapping:", train_dataset.class_to_idx)
+        print("Device: " + str(device))
+        print("Train dataset len: " + str(len(train_dataset)))
+        print("Test dataset len: " + str(len(test_dataset)))
 
-    plt.plot(xData, yLossData)
-    plt.plot(xData, yTestData)
-    plt.show()
+        #learning
 
-    model.save()
+        for epoch in range(num_epochs):
+            #learn
+            model.train()
+            running_loss = 0.0
 
-elif (a == 2):
-    model.load()
-    model.eval()
+            for images, labels in train_loader:
+                images = images.to(device)
+                labels = labels.float().unsqueeze(1)
+                labels = labels.to(device)
 
-    Functions.Run_test(model, device, sample_loader)
+                optimizer.zero_grad()
+                outputs = model(images)
+                loss = criterion(outputs, labels)
 
-    with torch.no_grad():
-        for images, labels in sample_loader:
-            images = images.to(device)
-            labels = labels.to(device)
+                if (n % 100 == 0):
+                    xData.append(n / 100)
+                    yLossData.append(loss.item())
+                    #yTestData.append(Functions.Run_partial_test(model, device, test_loader))      
+                    yTestData.append(run_test(model, device, sample_loader))        
 
-            outputs = model(images)
-            probs = torch.sigmoid(outputs)
-            predicted = (probs > Functions.border).int()
+                n += 1
 
-            img = images[0].to(torch.device("cpu"))
+                print("Loss: " + str(round(loss.item(), 2)))
 
-            #makes the image compatible with plt
-            img_np = img.permute(1, 2, 0).numpy()
+                loss.backward()
+                optimizer.step()
+                running_loss += loss.item()
 
-            #inverse normalisation
-            img_np = (img_np * 0.5) + 0.5
+            avg_loss = running_loss / len(train_loader)
+            print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}")
 
-            if (predicted.item() == 0):
-                predicted_string = "real"
-            else:
-                predicted_string = "ai generated"
 
-            if (labels.item() == 0):
-                labels_string = "real"
-            else:
-                labels_string = "ai generated"
+            #test
+            run_test(model, device, test_loader)
 
-            print("Predicted: " + predicted_string + ", Actual: " + labels_string)
+        plt.plot(xData, yLossData)
+        plt.plot(xData, yTestData)
+        plt.show()
 
-            plt.imshow(img_np)
-            plt.axis('off')
-            plt.show()
+        model.save()
+
+    elif a == 2:
+        model.load()
+        model.eval()
+
+        with torch.no_grad():
+            for images, labels in sample_loader:
+                images = images.to(device)
+                labels = labels.to(device)
+
+                outputs = model(images)
+                probs = torch.sigmoid(outputs)
+                predicted = (probs > border).int()
+
+                img = images[0].to(torch.device("cpu"))
+
+                #makes the image compatible with plt
+                img_np = img.permute(1, 2, 0).numpy()
+
+                #inverse normalisation
+                img_np = (img_np * 0.5) + 0.5
+
+                if (predicted.item() == 0):
+                    predicted_string = "real"
+                else:
+                    predicted_string = "ai generated"
+
+                if (labels.item() == 0):
+                    labels_string = "real"
+                else:
+                    labels_string = "ai generated"
+
+                print("Predicted: " + predicted_string + ", Actual: " + labels_string)
+
+                plt.imshow(img_np)
+                plt.axis('off')
+                plt.show()
+                
+    elif a == 3:
+        test_dataset_list = []
+
+        for i in test_locations:
+            test_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
+
+        test_dataset = torch.utils.data.ConcatDataset(test_dataset_list)
+        test_dataset = AugmentedDataset(test_dataset)
+        test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+        
+        #find_best_border(model, device, test_loader)
+        result = run_test(model, device, test_loader)
