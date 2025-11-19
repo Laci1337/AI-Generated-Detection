@@ -7,8 +7,8 @@ import torch.utils.data as data
 import matplotlib.pyplot as plt
 import os
 
-import ClassificationNetwork
-from Functions import run_test, run_partial_test, find_best_border, border
+from ClassificationNetwork import ClassificationNetwork, border0
+from Functions import run_test, run_detailed_test, find_best_border, find_best_border_for_fpr, find_best_border_for_youden, collect_model_outputs
 from AugmentedDataset import AugmentedDataset
 
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     #model, loss and optim
 
-    model = ClassificationNetwork.ClassificationNetwork().to(device)
+    model = ClassificationNetwork().to(device)
 
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -117,9 +117,9 @@ if __name__ == "__main__":
 
                 if (n % 100 == 0):
                     xData.append(n / 100)
-                    yLossData.append(loss.item())
-                    #yTestData.append(Functions.Run_partial_test(model, device, test_loader))      
-                    yTestData.append(run_test(model, device, sample_loader))        
+                    yLossData.append(loss.item())    
+                    model_outputs = collect_model_outputs(model, device, sample_loader)
+                    yTestData.append(run_test(border0, model_outputs))        
 
                 n += 1
 
@@ -134,13 +134,14 @@ if __name__ == "__main__":
 
 
             #test
-            run_test(model, device, test_loader)
+            model_outputs = collect_model_outputs(model, device, test_loader)
+            run_test(border0, model_outputs)
+            
+        model.save()
 
         plt.plot(xData, yLossData)
         plt.plot(xData, yTestData)
         plt.show()
-
-        model.save()
 
     elif a == 2:
         model.load()
@@ -153,7 +154,8 @@ if __name__ == "__main__":
 
                 outputs = model(images)
                 probs = torch.sigmoid(outputs)
-                predicted = (probs > border).int()
+                print(f'Probs: {probs}')
+                predicted = (probs > border0).int()
 
                 img = images[0].to(torch.device("cpu"))
 
@@ -186,8 +188,12 @@ if __name__ == "__main__":
             test_dataset_list.append(datasets.ImageFolder(root='data/' + str(i), transform=transform))
 
         test_dataset = torch.utils.data.ConcatDataset(test_dataset_list)
-        test_dataset = AugmentedDataset(test_dataset)
+        #test_dataset = AugmentedDataset(test_dataset)
         test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
         
-        #find_best_border(model, device, test_loader)
-        result = run_test(model, device, test_loader)
+        model_outputs = collect_model_outputs(model, device, test_loader)
+        best_border = find_best_border_for_youden(model_outputs)
+        print(f'Best border for youden: {best_border}')
+        #tp, fp, tn, fn = run_detailed_test(border0, model_outputs)
+        #print(f'Tp: {tp}, Fp: {fp}, Tn: {tn}, Fn: {fn}')
+        #print(f'Accuracy: {(tp + tn) / (tp + fp + tn + fn)}')

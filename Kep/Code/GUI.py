@@ -4,6 +4,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 
 import ClassificationNetwork
+from Functions import border0
 import Functions
 import App
 
@@ -63,7 +64,7 @@ class GUI():
                 prob_percent = prob * 100.0
                 #TODO probs adjust to the border
                 
-                pred_int = int((probs > Functions.border).int().item())
+                pred_int = int((probs > border0).int().item())
 
             with c2:
                 st.subheader(f"Előfeldolgozott ({self.image_size}×{self.image_size})")
