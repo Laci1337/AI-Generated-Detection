@@ -3,10 +3,8 @@ import torch
 from PIL import Image
 import torchvision.transforms as transforms
 
-import ClassificationNetwork
-from Functions import border0
-import Functions
-import App
+from ClassificationNetwork import ClassificationNetwork, border0
+from App import image_size, transform
 
 class GUI():
     def __init__(self) -> None:
@@ -16,21 +14,16 @@ class GUI():
         st.set_page_config(layout="centered")
         st.title("AI által generált képek detektálása.")
         
-        use_cuda_default = torch.cuda.is_available()
-        device_choice = st.sidebar.selectbox("Eszköz", ["cuda", "cpu"], index=0 if use_cuda_default else 1)
-        self.device = torch.device(device_choice if (device_choice == "cpu" or torch.cuda.is_available()) else "cpu")
-        
-        st.sidebar.write(f"Aktív eszköz: {self.device}")
-        
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"        
         self.model = None
-        self.image_size = App.image_size
-        self.transform = App.transform
+        self.image_size = image_size
+        self.transform = transform
         
     def load_model(self, device: torch.device) -> None:
         '''
         Betolti a modellt, ha tudja, egyeb esetben hibat dob.
         '''
-        temp_model = ClassificationNetwork.ClassificationNetwork().to(device)
+        temp_model = ClassificationNetwork().to(device)
         is_model_loaded = temp_model.load()
         
         if is_model_loaded:
@@ -38,6 +31,24 @@ class GUI():
             self.model.eval()
         else:
             st.error("Model betöltése közben hiba történt.")
+            
+    def calculate_probabilities(self, probs: float) -> float:
+        '''
+        A dontesi hatar alapjan skalazva visszaadja az eselyet annak, hogy egy kep AI generalt
+        '''
+        if probs > 1.0:
+            raise ValueError('A probs parameter nem lehet nagyobb, mint 1!')
+        
+        if probs > border0:
+            rate = (probs - border0) / (1.0 - border0)
+            prob = 0.5 + 0.5 * rate
+        elif probs < border0:
+            rate = (border0 - probs) / border0
+            prob = 0.5 - 0.5 * rate
+        else:
+            prob = 0.5
+        
+        return prob
             
     def image_uploader(self) -> None:
         '''
@@ -53,7 +64,6 @@ class GUI():
                 st.subheader("Eredeti")
                 st.image(pil_img, use_column_width=True, caption=f"{pil_img.width}×{pil_img.height}")
 
-            # Előfeldolgozás a fenti transformmal
             x = self.transform(pil_img).unsqueeze(0).to(self.device)
 
             # Inferencia
@@ -61,14 +71,12 @@ class GUI():
                 logits = self.model(x)
                 probs = torch.sigmoid(logits)
                 prob = float(probs.squeeze().item())
-                prob_percent = prob * 100.0
-                #TODO probs adjust to the border
-                
-                pred_int = int((probs > border0).int().item())
+                adjusted_prob = self.calculate_probabilities(prob)
+                adjusted_prob_percent = 100.0 * adjusted_prob
+                decision = "Mesterséges intelligenca által generált" if adjusted_prob > 0.5 else "Valós"
 
             with c2:
                 st.subheader(f"Előfeldolgozott ({self.image_size}×{self.image_size})")
-                # vizualizációhoz denormalizáljuk
                 x_vis = x[0].detach().cpu()
                 x_vis = (x_vis * 0.5) + 0.5
                 st.image(transforms.functional.to_pil_image(x_vis.clamp(0, 1)), use_column_width=True)
@@ -77,8 +85,9 @@ class GUI():
             st.subheader("Eredmény")
 
             st.write(
-                f"A kép {prob_percent:.2f}% eséllyel mesterséges intelligencia által generált, {100.0 - prob_percent:.2f}% eséllyel valós"
+                f"A kép {adjusted_prob_percent:.2f}% eséllyel mesterséges intelligencia által generált, {100.0 - adjusted_prob_percent:.2f}% eséllyel valós"
             )
+            st.write(f"A modell döntése: {decision}")
         else:
             st.info("Tölts fel egy képet a modell futtatásához.")
             
@@ -88,16 +97,9 @@ class GUI():
         
 if __name__ == "__main__":
     image_size = 240
-    
-    transform = transforms.Compose([
-    # 1) középről square crop a rövidebb oldal szerint
-    transforms.Lambda(lambda img: transforms.functional.center_crop(img, min(img.size))),
-    # 2) átméretezés image_size x image_size-re
-    transforms.Resize((image_size, image_size), interpolation=transforms.InterpolationMode.BICUBIC),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-])
-    
+        
     gui_instance = GUI()
     gui_instance.load_model(gui_instance.device)
     gui_instance.image_uploader()
+    
+    print(gui_instance.calculate_probabilities(0.95))

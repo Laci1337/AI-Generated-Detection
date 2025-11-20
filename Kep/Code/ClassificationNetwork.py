@@ -6,7 +6,7 @@ import torchvision.datasets as datasets
 import torch.utils.data as data
 import os
 
-border0 = 0.5
+border0 = 0.9
 
 class ClassificationNetwork(nn.Module):
     def __init__(self) -> None:
